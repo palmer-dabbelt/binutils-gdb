@@ -1,0 +1,107 @@
+#as: -march=rv64gcxtheadc
+#objdump: -dr
+
+.*:[ 	]+file format .*
+
+
+Disassembly of section .text:
+
+0000000000000000 <.text>:
+   0:	7c002573          	csrr	a0,thead_mxstatus
+   4:	7c102573          	csrr	a0,thead_mhcr
+   8:	7c202573          	csrr	a0,thead_mcor
+   c:	7c302573          	csrr	a0,thead_mccr2
+  10:	7c402573          	csrr	a0,thead_mcer2
+  14:	7c502573          	csrr	a0,thead_mhint
+  18:	7c602573          	csrr	a0,thead_mrmr
+  1c:	7c702573          	csrr	a0,thead_mrvbr
+  20:	7c802573          	csrr	a0,thead_mcer
+  24:	7c902573          	csrr	a0,thead_mcounterwen
+  28:	7ca02573          	csrr	a0,thead_mcounterinten
+  2c:	7cb02573          	csrr	a0,thead_mcounterof
+  30:	7cc02573          	csrr	a0,thead_mhint2
+  34:	7cd02573          	csrr	a0,thead_mhint3
+  38:	7e002573          	csrr	a0,thead_mraddr
+  3c:	7e102573          	csrr	a0,thead_mexstatus
+  40:	7e202573          	csrr	a0,thead_mnmicause
+  44:	7e302573          	csrr	a0,thead_mnmipc
+  48:	7f002573          	csrr	a0,thead_mhpmcr
+  4c:	7f102573          	csrr	a0,thead_mhpmsr
+  50:	7f202573          	csrr	a0,thead_mhpmer
+  54:	7f302573          	csrr	a0,thead_msmpr
+  58:	7f402573          	csrr	a0,thead_mteecfg
+  5c:	7d102573          	csrr	a0,thead_usp
+  60:	7d202573          	csrr	a0,thead_mcins
+  64:	7d302573          	csrr	a0,thead_mcindex
+  68:	7d402573          	csrr	a0,thead_mcdata0
+  6c:	7d502573          	csrr	a0,thead_mcdata1
+  70:	7d602573          	csrr	a0,thead_meicr
+  74:	7d702573          	csrr	a0,thead_meicr2
+  78:	be002573          	csrr	a0,thead_mebr
+  7c:	be102573          	csrr	a0,thead_nt_mstatus
+  80:	be302573          	csrr	a0,thead_nt_mtvec
+  84:	be202573          	csrr	a0,thead_nt_mie
+  88:	be402573          	csrr	a0,thead_nt_mtvt
+  8c:	be502573          	csrr	a0,thead_nt_mepc
+  90:	be602573          	csrr	a0,thead_nt_mcause
+  94:	be702573          	csrr	a0,thead_nt_mip
+  98:	be802573          	csrr	a0,thead_nt_mintstate
+  9c:	be902573          	csrr	a0,thead_nt_mxstatus
+  a0:	bea02573          	csrr	a0,thead_nt_mebr
+  a4:	beb02573          	csrr	a0,thead_nt_msp
+  a8:	bec02573          	csrr	a0,thead_t_usp
+  ac:	bed02573          	csrr	a0,thead_t_mdcr
+  b0:	bee02573          	csrr	a0,thead_t_mpcr
+  b4:	bef02573          	csrr	a0,thead_pmpteecfg
+  b8:	fc002573          	csrr	a0,thead_mcpuid
+  bc:	fc102573          	csrr	a0,thead_mapbaddr
+  c0:	fc202573          	csrr	a0,thead_mwmsr
+  c4:	80002573          	csrr	a0,thead_fxcr
+  c8:	9c002573          	csrr	a0,thead_smir
+  cc:	9c102573          	csrr	a0,thead_smel
+  d0:	9c202573          	csrr	a0,thead_smeh
+  d4:	9c302573          	csrr	a0,thead_smcir
+  d8:	5c002573          	csrr	a0,thead_sxstatus
+  dc:	5c102573          	csrr	a0,thead_shcr
+  e0:	5c202573          	csrr	a0,thead_scer2
+  e4:	5c302573          	csrr	a0,thead_scer
+  e8:	5c402573          	csrr	a0,thead_scounterinten
+  ec:	5c502573          	csrr	a0,thead_scounterof
+  f0:	5c602573          	csrr	a0,thead_shint
+  f4:	5c702573          	csrr	a0,thead_shint2
+  f8:	5c802573          	csrr	a0,thead_shpminhibit
+  fc:	5c902573          	csrr	a0,thead_shpmcr
+ 100:	5ca02573          	csrr	a0,thead_shpmsr
+ 104:	5cb02573          	csrr	a0,thead_shpmer
+ 108:	5e002573          	csrr	a0,thead_scycle
+ 10c:	5e102573          	csrr	a0,thead_shpmcounter1
+ 110:	5e202573          	csrr	a0,thead_shpmcounter2
+ 114:	5e302573          	csrr	a0,thead_shpmcounter3
+ 118:	5e402573          	csrr	a0,thead_shpmcounter4
+ 11c:	5e502573          	csrr	a0,thead_shpmcounter5
+ 120:	5e602573          	csrr	a0,thead_shpmcounter6
+ 124:	5e702573          	csrr	a0,thead_shpmcounter7
+ 128:	5e802573          	csrr	a0,thead_shpmcounter8
+ 12c:	5e902573          	csrr	a0,thead_shpmcounter9
+ 130:	5ea02573          	csrr	a0,thead_shpmcounter10
+ 134:	5eb02573          	csrr	a0,thead_shpmcounter11
+ 138:	5ec02573          	csrr	a0,thead_shpmcounter12
+ 13c:	5ed02573          	csrr	a0,thead_shpmcounter13
+ 140:	5ee02573          	csrr	a0,thead_shpmcounter14
+ 144:	5ef02573          	csrr	a0,thead_shpmcounter15
+ 148:	5f002573          	csrr	a0,thead_shpmcounter16
+ 14c:	5f102573          	csrr	a0,thead_shpmcounter17
+ 150:	5f202573          	csrr	a0,thead_shpmcounter18
+ 154:	5f302573          	csrr	a0,thead_shpmcounter19
+ 158:	5f402573          	csrr	a0,thead_shpmcounter20
+ 15c:	5f502573          	csrr	a0,thead_shpmcounter21
+ 160:	5f602573          	csrr	a0,thead_shpmcounter22
+ 164:	5f702573          	csrr	a0,thead_shpmcounter23
+ 168:	5f802573          	csrr	a0,thead_shpmcounter24
+ 16c:	5f902573          	csrr	a0,thead_shpmcounter25
+ 170:	5fa02573          	csrr	a0,thead_shpmcounter26
+ 174:	5fb02573          	csrr	a0,thead_shpmcounter27
+ 178:	5fc02573          	csrr	a0,thead_shpmcounter28
+ 17c:	5fd02573          	csrr	a0,thead_shpmcounter29
+ 180:	5fe02573          	csrr	a0,thead_shpmcounter30
+ 184:	5ff02573          	csrr	a0,thead_shpmcounter31

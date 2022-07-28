@@ -266,6 +266,39 @@ match_vd_eq_vs1_eq_vs2 (const struct riscv_opcode *op,
   return match_opcode (op, insn) && vd == vs1 && vs1 == vs2;
 }
 
+/*
+ * Handling for some T-Head instructions
+ *
+ *  ARG format:
+ *
+ *  "Xgm@n": encode GPR with m bit at opcode[m+n-1:n].
+ *   "Xg5@0": encode GPR with 5 bit at opcode[4:0].
+ *   "Xg5@8": encode GPR with 5 bit at opcode[12:8].
+ *
+ *  "XIm@n": m bits unsigned immediate at opcode[m+n-1:n].
+ *   "XI5@0": 5 bits unsigned immediate at opcode[4:0].
+ *   "XI4@8": 4 bits unsigned immediate at opcode[11:8].
+ *
+ *  "XSm@n": m bits signed immediate at opcode[m+n-1:n].
+ *   "XS5@0": 5 bits signed immediate at opcode[4:0].
+ *   "XS4@8": 4 bits signed immediate at opcode[11:8].
+ *
+ *  "XFm@n": m bits FR at opcode[m+n-1:n].
+ *   "XF5@0": 5 bits FR at opcode[4:0].
+ *   "XF5@0": 5 bits FR at opcode[4:0].
+*/
+static int
+match_thead_rd1_rd2_neq_rs1(const struct riscv_opcode *op,
+			    insn_t insn)
+{
+  int rd1 = (insn & MASK_RD) >> OP_SH_RD;
+  int rd2 = (insn & MASK_RS2) >> OP_SH_RS2;
+  int rs1 = (insn & MASK_RS1) >> OP_SH_RS1;
+
+  /* FIXME: add xlen check.  */
+  return match_opcode (op, insn) && rd1 != rs1 && rd2 != rs1;
+}
+
 const struct riscv_opcode riscv_opcodes[] =
 {
 /* name, xlen, isa, operands, match, mask, match_func, pinfo.  */
@@ -1824,6 +1857,119 @@ const struct riscv_opcode riscv_opcodes[] =
 {"hsv.h",       0, INSN_CLASS_H, "t,0(s)", MATCH_HSV_H, MASK_HSV_H, match_opcode, INSN_DREF|INSN_2_BYTE },
 {"hsv.w",       0, INSN_CLASS_H, "t,0(s)", MATCH_HSV_W, MASK_HSV_W, match_opcode, INSN_DREF|INSN_4_BYTE },
 {"hsv.d",      64, INSN_CLASS_H, "t,0(s)", MATCH_HSV_D, MASK_HSV_D, match_opcode, INSN_DREF|INSN_8_BYTE },
+
+/* The vendor extension opcodes for T-HEAD.  */
+{"thead.wsc",             0, INSN_CLASS_THEAD_C_OR_E,   "",  MATCH_WSC, MASK_WSC, match_opcode, 0},
+{"thead.dcache.iall",     0, INSN_CLASS_THEAD_C_OR_E,   "",  MATCH_DCACHE_IALL, MASK_DCACHE_IALL, match_opcode, 0},
+{"thead.dcache.call",     0, INSN_CLASS_THEAD_C_OR_E,   "",  MATCH_DCACHE_CALL, MASK_DCACHE_CALL, match_opcode, 0},
+{"thead.dcache.ciall",    0, INSN_CLASS_THEAD_C_OR_E,   "",  MATCH_DCACHE_CIALL, MASK_DCACHE_CIALL, match_opcode, 0},
+{"thead.dcache.isw",      0, INSN_CLASS_THEAD_C_OR_E,   "s",     MATCH_DCACHE_ISW, MASK_DCACHE_ISW, match_opcode, 0},
+{"thead.dcache.csw",      0, INSN_CLASS_THEAD_C_OR_E,   "s",     MATCH_DCACHE_CSW, MASK_DCACHE_CSW, match_opcode, 0},
+{"thead.dcache.cisw",     0, INSN_CLASS_THEAD_C_OR_E,   "s",     MATCH_DCACHE_CISW, MASK_DCACHE_CISW, match_opcode, 0},
+{"thead.dcache.iva",      0, INSN_CLASS_THEAD_C,   "s",     MATCH_DCACHE_IVA, MASK_DCACHE_IVA, match_opcode, 0},
+{"thead.dcache.cva",      0, INSN_CLASS_THEAD_C,   "s",     MATCH_DCACHE_CVA, MASK_DCACHE_CVA, match_opcode, 0},
+{"thead.dcache.cval1",    0, INSN_CLASS_THEAD_C,   "s",     MATCH_DCACHE_CVAL1, MASK_DCACHE_CVAL1, match_opcode, 0},
+{"thead.dcache.civa",     0, INSN_CLASS_THEAD_C,   "s",     MATCH_DCACHE_CIVA, MASK_DCACHE_CIVA, match_opcode, 0},
+{"thead.dcache.ipa",      0, INSN_CLASS_THEAD_C_OR_E,   "s",     MATCH_DCACHE_IPA, MASK_DCACHE_IPA, match_opcode, 0},
+{"thead.dcache.cpa",      0, INSN_CLASS_THEAD_C_OR_E,   "s",     MATCH_DCACHE_CPA, MASK_DCACHE_CPA, match_opcode, 0},
+{"thead.dcache.cpal1",    0, INSN_CLASS_THEAD_C,   "s",     MATCH_DCACHE_CPAL1, MASK_DCACHE_CPAL1, match_opcode, 0},
+{"thead.dcache.cipa",     0, INSN_CLASS_THEAD_C_OR_E,   "s",     MATCH_DCACHE_CIPA, MASK_DCACHE_CIPA, match_opcode, 0},
+{"thead.icache.iall",     0, INSN_CLASS_THEAD_C_OR_E_OR_SE,   "",      MATCH_ICACHE_IALL, MASK_ICACHE_IALL, match_opcode, 0},
+{"thead.icache.iall",     0, INSN_CLASS_THEAD_SE,   "",      MATCH_ICACHE_IALL, MASK_ICACHE_IALL, match_opcode, INSN_ALIAS},
+{"thead.icache.ialls",    0, INSN_CLASS_THEAD_C,   "",      MATCH_ICACHE_IALLS, MASK_ICACHE_IALLS, match_opcode, 0},
+{"thead.icache.iva",      0, INSN_CLASS_THEAD_C,   "s",     MATCH_ICACHE_IVA, MASK_ICACHE_IVA, match_opcode, 0},
+{"thead.icache.ipa",      0, INSN_CLASS_THEAD_C_OR_E,   "s",     MATCH_ICACHE_IPA, MASK_ICACHE_IPA, match_opcode, 0},
+{"thead.l2cache.iall",    0, INSN_CLASS_THEAD_C,   "",      MATCH_L2CACHE_IALL, MASK_L2CACHE_IALL, match_opcode, 0},
+{"thead.l2cache.call",    0, INSN_CLASS_THEAD_C,   "",      MATCH_L2CACHE_CALL, MASK_L2CACHE_CALL, match_opcode, 0},
+{"thead.l2cache.ciall",   0, INSN_CLASS_THEAD_C_OR_E,   "",      MATCH_L2CACHE_CIALL, MASK_L2CACHE_CIALL, match_opcode, 0},
+{"thead.sync",            0, INSN_CLASS_THEAD_C_OR_E,   "",      MATCH_SYNC, MASK_SYNC, match_opcode, 0},
+{"thead.sync.i",          0, INSN_CLASS_THEAD_C_OR_E,   "",      MATCH_SYNC_I, MASK_SYNC_I, match_opcode, 0},
+{"thead.sync.s",          0, INSN_CLASS_THEAD_C,   "",      MATCH_SYNC_S, MASK_SYNC_S, match_opcode, 0},
+{"thead.sync.is",         0, INSN_CLASS_THEAD_C,   "",      MATCH_SYNC_IS, MASK_SYNC_IS, match_opcode, 0},
+{"thead.tstnbz",          0, INSN_CLASS_THEAD_C_OR_E,   "d,s",     MATCH_TSTNBZ, MASK_TSTNBZ, match_opcode, 0},
+{"thead.mula",            0, INSN_CLASS_THEAD_C_OR_E,   "d,s,t",   MATCH_MULA, MASK_MULA, match_opcode, 0},
+{"thead.muls",            0, INSN_CLASS_THEAD_C_OR_E,   "d,s,t",   MATCH_MULS, MASK_MULS, match_opcode, 0},
+{"thead.mulah",           0, INSN_CLASS_THEAD_C_OR_E,   "d,s,t",   MATCH_MULAH, MASK_MULAH, match_opcode, 0},
+{"thead.mulsh",           0, INSN_CLASS_THEAD_C_OR_E,   "d,s,t",   MATCH_MULSH, MASK_MULSH, match_opcode, 0},
+{"thead.sfence.vmas",     0, INSN_CLASS_THEAD_C,   "s,t",      MATCH_SFENCE_VMAS, MASK_SFENCE_VMAS, match_opcode, 0},
+{"thead.mveqz",           0, INSN_CLASS_THEAD_C_OR_E,   "d,s,t",   MATCH_MVEQZ, MASK_MVEQZ, match_opcode, 0},
+{"thead.mvnez",           0, INSN_CLASS_THEAD_C_OR_E,   "d,s,t",   MATCH_MVNEZ, MASK_MVNEZ, match_opcode, 0},
+{"thead.mulaw",           0, INSN_CLASS_THEAD_C_OR_E,   "d,s,t",   MATCH_MULAW, MASK_MULAW, match_opcode, 0},
+{"thead.mulsw",           0, INSN_CLASS_THEAD_C_OR_E,   "d,s,t",   MATCH_MULSW, MASK_MULSW, match_opcode, 0},
+{"thead.ext",             64, INSN_CLASS_THEAD_C,  "d,s,XI6@26,XI6@20",   MATCH_EXT, MASK_EXT, match_opcode, 0 },
+{"thead.ext",             32, INSN_CLASS_THEAD_E,  "d,s,XI5@26,XI5@20",   MATCH_EXT, (MASK_EXT | (1U<<25) | (1U<<31)), match_opcode, 0 },
+{"thead.extu",            64, INSN_CLASS_THEAD_C,  "d,s,XI6@26,XI6@20",   MATCH_EXTU, MASK_EXTU, match_opcode, 0 },
+{"thead.extu",            32, INSN_CLASS_THEAD_E,  "d,s,XI5@26,XI5@20",   MATCH_EXTU, (MASK_EXTU | (1U<<25) | (1U<<31)), match_opcode, 0 },
+{"thead.ff1",             0, INSN_CLASS_THEAD_C_OR_E,   "d,s",   MATCH_FF1, MASK_FF1, match_opcode, 0},
+{"thead.ff0",             0, INSN_CLASS_THEAD_C_OR_E,   "d,s",   MATCH_FF0, MASK_FF1, match_opcode, 0},
+{"thead.rev",             0, INSN_CLASS_THEAD_C_OR_E,   "d,s",   MATCH_REV, MASK_REV, match_opcode, 0},
+{"thead.lrb",             0, INSN_CLASS_THEAD_C_OR_E,   "d,s,t,XI2@25",   MATCH_LRB, MASK_LRB, match_opcode, 0 },
+{"thead.lrbu",            0, INSN_CLASS_THEAD_C_OR_E,   "d,s,t,XI2@25",   MATCH_LRBU, MASK_LRBU, match_opcode, 0 },
+{"thead.lrh",             0, INSN_CLASS_THEAD_C_OR_E,   "d,s,t,XI2@25",   MATCH_LRH, MASK_LRH, match_opcode, 0 },
+{"thead.lrhu",            0, INSN_CLASS_THEAD_C_OR_E,   "d,s,t,XI2@25",   MATCH_LRHU, MASK_LRHU, match_opcode, 0 },
+{"thead.lrw",             0, INSN_CLASS_THEAD_C_OR_E,   "d,s,t,XI2@25",   MATCH_LRW, MASK_LRW, match_opcode, 0 },
+{"thead.lrwu",            0, INSN_CLASS_THEAD_C_OR_E,   "d,s,t,XI2@25",   MATCH_LRWU, MASK_LRWU, match_opcode, 0 },
+{"thead.srb",             0, INSN_CLASS_THEAD_C_OR_E,   "d,s,t,XI2@25",   MATCH_SRB, MASK_SRB, match_opcode, 0 },
+{"thead.srh",             0, INSN_CLASS_THEAD_C_OR_E,   "d,s,t,XI2@25",   MATCH_SRH, MASK_SRH, match_opcode, 0 },
+{"thead.srw",             0, INSN_CLASS_THEAD_C_OR_E,   "d,s,t,XI2@25",   MATCH_SRW, MASK_SRW, match_opcode, 0 },
+{"thead.lrd",             0, INSN_CLASS_THEAD_C,   "d,s,t,XI2@25",   MATCH_LRD, MASK_LRD, match_opcode, 0 },
+{"thead.srd",             0, INSN_CLASS_THEAD_C,   "d,s,t,XI2@25",   MATCH_SRD, MASK_SRD, match_opcode, 0 },
+{"thead.lurb",            0, INSN_CLASS_THEAD_C,   "d,s,t,XI2@25",   MATCH_LURB, MASK_LURB, match_opcode, 0 },
+{"thead.lurbu",           0, INSN_CLASS_THEAD_C,   "d,s,t,XI2@25",   MATCH_LURBU, MASK_LURBU, match_opcode, 0 },
+{"thead.lurh",            0, INSN_CLASS_THEAD_C,   "d,s,t,XI2@25",   MATCH_LURH, MASK_LURH, match_opcode, 0 },
+{"thead.lurhu",           0, INSN_CLASS_THEAD_C,   "d,s,t,XI2@25",   MATCH_LURHU, MASK_LURHU, match_opcode, 0 },
+{"thead.lurw",            0, INSN_CLASS_THEAD_C,   "d,s,t,XI2@25",   MATCH_LURW, MASK_LURW, match_opcode, 0 },
+{"thead.lurwu",           0, INSN_CLASS_THEAD_C,   "d,s,t,XI2@25",   MATCH_LURWU, MASK_LURWU, match_opcode, 0 },
+{"thead.lurd",            0, INSN_CLASS_THEAD_C,   "d,s,t,XI2@25",   MATCH_LURD, MASK_LURD, match_opcode, 0 },
+{"thead.surb",            0, INSN_CLASS_THEAD_C,   "d,s,t,XI2@25",   MATCH_SURB, MASK_SURB, match_opcode, 0 },
+{"thead.surh",            0, INSN_CLASS_THEAD_C,   "d,s,t,XI2@25",   MATCH_SURH, MASK_SURH, match_opcode, 0 },
+{"thead.surw",            0, INSN_CLASS_THEAD_C,   "d,s,t,XI2@25",   MATCH_SURW, MASK_SURW, match_opcode, 0 },
+{"thead.surd",            0, INSN_CLASS_THEAD_C,   "d,s,t,XI2@25",   MATCH_SURD, MASK_SURD, match_opcode, 0 },
+{"thead.tst",             64, INSN_CLASS_THEAD_C,  "d,s,XI6@20",   MATCH_TST, MASK_TST, match_opcode, 0 },
+{"thead.tst",             32, INSN_CLASS_THEAD_E,   "d,s,XI5@20",   MATCH_TST, (MASK_TST | (1U << 25)), match_opcode, INSN_ALIAS},
+{"thead.srriw",           0, INSN_CLASS_THEAD_C,   "d,s,XI5@20",   MATCH_SRRIW, MASK_SRRIW, match_opcode, 0 },
+{"thead.srri",            0, INSN_CLASS_THEAD_C_OR_E,   "d,s,XI6@20",   MATCH_SRRI, MASK_SRRI, match_opcode, 0 },
+{"thead.addsl",           0, INSN_CLASS_THEAD_C_OR_E,   "d,s,t,XI2@25", MATCH_ADDSL, MASK_ADDSL, match_opcode, 0 },
+{"thead.lwd",             0, INSN_CLASS_THEAD_C,   "d,t,(s),XI2@25", MATCH_LWD, MASK_LWD, match_thead_rd1_rd2_neq_rs1, 0 },
+{"thead.ldd",             0, INSN_CLASS_THEAD_C,   "d,t,(s),XI2@25", MATCH_LDD, MASK_LDD, match_thead_rd1_rd2_neq_rs1, 0 },
+{"thead.swd",             0, INSN_CLASS_THEAD_C,   "d,t,(s),XI2@25", MATCH_SWD, MASK_SWD, match_opcode, 0 },
+{"thead.sdd",             0, INSN_CLASS_THEAD_C,   "d,t,(s),XI2@25", MATCH_SDD, MASK_SDD, match_opcode, 0 },
+{"thead.sdia",            0, INSN_CLASS_THEAD_C,   "d,(s),XS5@20,XI2@25", MATCH_SDIA, MASK_SDIA, match_opcode, 0 },
+{"thead.sdib",            0, INSN_CLASS_THEAD_C,   "d,(s),XS5@20,XI2@25", MATCH_SDIB, MASK_SDIB, match_opcode, 0 },
+{"thead.lwud",            0, INSN_CLASS_THEAD_C,   "d,t,(s),XI2@25", MATCH_LWUD, MASK_LWUD, match_thead_rd1_rd2_neq_rs1, 0 },
+{"thead.swia",            0, INSN_CLASS_THEAD_C_OR_E,   "d,(s),XS5@20,XI2@25", MATCH_SWIA, MASK_SWIA, match_opcode, 0},
+{"thead.swib",            0, INSN_CLASS_THEAD_C_OR_E,   "d,(s),XS5@20,XI2@25", MATCH_SWIB, MASK_SWIB, match_opcode, 0},
+{"thead.shia",            0, INSN_CLASS_THEAD_C_OR_E,   "d,(s),XS5@20,XI2@25", MATCH_SHIA, MASK_SHIA, match_opcode, 0},
+{"thead.shib",            0, INSN_CLASS_THEAD_C_OR_E,   "d,(s),XS5@20,XI2@25", MATCH_SHIB, MASK_SHIB, match_opcode, 0},
+{"thead.sbia",            0, INSN_CLASS_THEAD_C_OR_E,   "d,(s),XS5@20,XI2@25", MATCH_SBIA, MASK_SBIA, match_opcode, 0},
+{"thead.sbib",            0, INSN_CLASS_THEAD_C_OR_E,   "d,(s),XS5@20,XI2@25", MATCH_SBIB, MASK_SBIB, match_opcode, 0},
+{"thead.lwuia",           0, INSN_CLASS_THEAD_C_OR_E,   "d,(s),XS5@20,XI2@25", MATCH_LWUIA, MASK_LWUIA, match_opcode, 0},
+{"thead.lwuib",           0, INSN_CLASS_THEAD_C_OR_E,   "d,(s),XS5@20,XI2@25", MATCH_LWUIB, MASK_LWUIB, match_opcode, 0},
+{"thead.lhuia",           0, INSN_CLASS_THEAD_C_OR_E,   "d,(s),XS5@20,XI2@25", MATCH_LHUIA, MASK_LHUIA, match_opcode, 0},
+{"thead.lhuib",           0, INSN_CLASS_THEAD_C_OR_E,   "d,(s),XS5@20,XI2@25", MATCH_LHUIB, MASK_LHUIB, match_opcode, 0},
+{"thead.lbuia",           0, INSN_CLASS_THEAD_C_OR_E,   "d,(s),XS5@20,XI2@25", MATCH_LBUIA, MASK_LBUIA, match_opcode, 0},
+{"thead.lbuib",           0, INSN_CLASS_THEAD_C_OR_E,   "d,(s),XS5@20,XI2@25", MATCH_LBUIB, MASK_LBUIB, match_opcode, 0},
+{"thead.ldia",            0, INSN_CLASS_THEAD_C,   "d,(s),XS5@20,XI2@25", MATCH_LDIA, MASK_LDIA, match_opcode, 0},
+{"thead.ldib",            0, INSN_CLASS_THEAD_C,   "d,(s),XS5@20,XI2@25", MATCH_LDIB, MASK_LDIB, match_opcode, 0},
+{"thead.lwia",            0, INSN_CLASS_THEAD_C_OR_E,   "d,(s),XS5@20,XI2@25", MATCH_LWIA, MASK_LWIA, match_opcode, 0},
+{"thead.lwib",            0, INSN_CLASS_THEAD_C_OR_E,   "d,(s),XS5@20,XI2@25", MATCH_LWIB, MASK_LWIB, match_opcode, 0},
+{"thead.lhia",            0, INSN_CLASS_THEAD_C_OR_E,   "d,(s),XS5@20,XI2@25", MATCH_LHIA, MASK_LHIA, match_opcode, 0},
+{"thead.lhib",            0, INSN_CLASS_THEAD_C_OR_E,   "d,(s),XS5@20,XI2@25", MATCH_LHIB, MASK_LHIB, match_opcode, 0},
+{"thead.lbia",            0, INSN_CLASS_THEAD_C_OR_E,   "d,(s),XS5@20,XI2@25", MATCH_LBIA, MASK_LBIA, match_opcode, 0},
+{"thead.lbib",            0, INSN_CLASS_THEAD_C_OR_E,   "d,(s),XS5@20,XI2@25", MATCH_LBIB, MASK_LBIB, match_opcode, 0},
+{"thead.fsurd",           0, INSN_CLASS_THEAD_C,   "D,s,t,XI2@25", MATCH_FSURD, MASK_FSURD, match_opcode, 0},
+{"thead.revw",            0, INSN_CLASS_THEAD_C,   "d,s", MATCH_REVW, MASK_REVW, match_opcode, 0},
+{"thead.fsurw",           0, INSN_CLASS_THEAD_C,   "D,s,t,XI2@25", MATCH_FSURW, MASK_FSURW, match_opcode, 0},
+{"thead.flurd",           0, INSN_CLASS_THEAD_C,   "D,s,t,XI2@25", MATCH_FLURD, MASK_FLURD, match_opcode, 0},
+{"thead.flurw",           0, INSN_CLASS_THEAD_C,   "D,s,t,XI2@25", MATCH_FLURW, MASK_FLURW, match_opcode, 0},
+{"thead.fsrd",            0, INSN_CLASS_THEAD_C,   "D,s,t,XI2@25", MATCH_FSRD, MASK_FSRD, match_opcode, 0},
+{"thead.fsrw",            0, INSN_CLASS_THEAD_C,   "D,s,t,XI2@25", MATCH_FSRW, MASK_FSRW, match_opcode, 0},
+{"thead.flrd",            0, INSN_CLASS_THEAD_C,   "D,s,t,XI2@25", MATCH_FLRD, MASK_FLRD, match_opcode, 0},
+{"thead.flrw",            0, INSN_CLASS_THEAD_C,   "D,s,t,XI2@25", MATCH_FLRW, MASK_FLRW, match_opcode, 0},
+{"thead.ipush",           0, INSN_CLASS_THEAD_E,   "",  MATCH_IPUSH, MASK_IPUSH, match_opcode, 0},
+{"thead.ipop",            0, INSN_CLASS_THEAD_E,   "",  MATCH_IPOP, MASK_IPOP, match_opcode, 0},
+{"thead.fmv.x.hw",        32, INSN_CLASS_THEAD_E,  "d,S",  MATCH_FMV_X_HW, MASK_FMV_X_HW, match_opcode, 0},
+{"thead.fmv.hw.x",        32, INSN_CLASS_THEAD_E,  "D,s",  MATCH_FMV_HW_X, MASK_FMV_HW_X, match_opcode, 0},
 
 /* Terminate the list.  */
 {0, 0, INSN_CLASS_NONE, 0, 0, 0, 0, 0}

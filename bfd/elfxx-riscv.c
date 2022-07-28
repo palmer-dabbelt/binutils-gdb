@@ -1245,12 +1245,21 @@ static struct riscv_supported_ext riscv_supported_std_zxm_ext[] =
   {NULL, 0, 0, 0, 0}
 };
 
+static struct riscv_supported_ext riscv_supported_custom_ext[] =
+{
+  {"xtheadc",		VENDOR_SPEC_CLASS_THEAD,	2, 0, 0 },
+  {"xtheade",		VENDOR_SPEC_CLASS_THEAD,	2, 0, 0 },
+  {"xtheadse",		VENDOR_SPEC_CLASS_THEAD,	2, 0, 0 },
+  {NULL, 0, 0, 0, 0}
+};
+
 const struct riscv_supported_ext *riscv_all_supported_ext[] =
 {
   riscv_supported_std_ext,
   riscv_supported_std_z_ext,
   riscv_supported_std_s_ext,
   riscv_supported_std_zxm_ext,
+  riscv_supported_custom_ext,
   NULL
 };
 
@@ -1331,9 +1340,7 @@ riscv_recognized_prefixed_ext (const char *ext)
   case RV_ISA_CLASS_S:
     return riscv_known_prefixed_ext (ext, riscv_supported_std_s_ext);
   case RV_ISA_CLASS_X:
-    /* Only the single x is unrecognized.  */
-    if (strcmp (ext, "x") != 0)
-      return true;
+    return riscv_known_prefixed_ext (ext, riscv_supported_custom_ext);
   default:
     break;
   }
@@ -1504,10 +1511,9 @@ riscv_get_default_ext_version (enum riscv_spec_class *default_isa_spec,
   switch (class)
     {
     case RV_ISA_CLASS_ZXM: table = riscv_supported_std_zxm_ext; break;
-    case RV_ISA_CLASS_Z: table = riscv_supported_std_z_ext; break;
-    case RV_ISA_CLASS_S: table = riscv_supported_std_s_ext; break;
-    case RV_ISA_CLASS_X:
-      break;
+    case RV_ISA_CLASS_Z: table = riscv_supported_std_z_ext;     break;
+    case RV_ISA_CLASS_S: table = riscv_supported_std_s_ext;     break;
+    case RV_ISA_CLASS_X: table = riscv_supported_custom_ext;    break;
     default:
       table = riscv_supported_std_ext;
     }
@@ -1517,6 +1523,7 @@ riscv_get_default_ext_version (enum riscv_spec_class *default_isa_spec,
     {
       if (strcmp (table[i].name, name) == 0
 	  && (table[i].isa_spec_class == ISA_SPEC_CLASS_DRAFT
+	      || table[i].isa_spec_class == VENDOR_SPEC_CLASS_THEAD
 	      || table[i].isa_spec_class == *default_isa_spec))
 	{
 	  *major_version = table[i].major_version;
@@ -2402,6 +2409,19 @@ riscv_multi_subset_supports (riscv_parse_subset_t *rps,
       return riscv_subset_supports (rps, "svinval");
     case INSN_CLASS_H:
       return riscv_subset_supports (rps, "h");
+    case INSN_CLASS_THEAD_C:
+      return riscv_subset_supports (rps, "xtheadc");
+    case INSN_CLASS_THEAD_E:
+      return riscv_subset_supports (rps, "xtheade");
+    case INSN_CLASS_THEAD_SE:
+      return riscv_subset_supports (rps, "xtheadse");
+    case INSN_CLASS_THEAD_C_OR_E:
+      return (riscv_subset_supports (rps, "xtheadc")
+	      || riscv_subset_supports (rps, "xtheade"));
+    case INSN_CLASS_THEAD_C_OR_E_OR_SE:
+      return (riscv_subset_supports (rps, "xtheadc")
+	      || riscv_subset_supports (rps, "xtheade")
+	      || riscv_subset_supports (rps, "xtheadse"));
     default:
       rps->error_handler
         (_("internal: unreachable INSN_CLASS_*"));
@@ -2527,6 +2547,16 @@ riscv_multi_subset_supports_ext (riscv_parse_subset_t *rps,
       return "svinval";
     case INSN_CLASS_H:
       return _("h");
+    case INSN_CLASS_THEAD_C:
+      return "xtheadc";
+    case INSN_CLASS_THEAD_E:
+      return "xtheade";
+    case INSN_CLASS_THEAD_SE:
+      return "xtheadse";
+    case INSN_CLASS_THEAD_C_OR_E:
+      return _("xtheadc' or `xtheade");
+    case INSN_CLASS_THEAD_C_OR_E_OR_SE:
+      return _("xtheadc' or `xtheade' or `xtheadse");
     default:
       rps->error_handler
         (_("internal: unreachable INSN_CLASS_*"));

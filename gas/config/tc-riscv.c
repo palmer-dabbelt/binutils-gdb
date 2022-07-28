@@ -78,6 +78,7 @@ enum riscv_csr_class
   CSR_CLASS_SSTC_AND_H,		/* Sstc only (with H) */
   CSR_CLASS_SSTC_32,		/* Sstc RV32 only */
   CSR_CLASS_SSTC_AND_H_32,	/* Sstc RV32 only (with H) */
+  CSR_CLASS_THEAD, /* vendor CSR for T-HEAD */
 };
 
 /* This structure holds all restricted conditions for a CSR.  */
@@ -965,6 +966,9 @@ riscv_csr_address (const char *csr_name,
       break;
     case CSR_CLASS_DEBUG:
       break;
+    case CSR_CLASS_THEAD:
+      extension = "xthead";
+      break;
     default:
       as_bad (_("internal: bad RISC-V CSR class (0x%x)"), csr_class);
     }
@@ -1253,6 +1257,45 @@ validate_riscv_insn (const struct riscv_opcode *opc, int length)
 		goto unknown_validate_operand;
 	    }
 	  break;
+        case 'X': /* Opcode for custom instructions.  */
+          switch (*++oparg)
+           {
+           case 'g':
+             /* Xgm@n.  */
+           case 'F':
+             /* XFm@n.  */
+           case 'I':
+               {
+                 /* XIm@n.  */
+                 int nbit = 0;
+                 int at = -1;
+                 int shift = 0;
+                 nbit = strtol (++oparg, (char **)&oparg, 10);
+                 if (*oparg =='@')
+                   at = strtol (++oparg, (char **)&oparg, 10);
+                 oparg--;
+    
+                 used_bits |= ENCODE_VENDOR_THEAD_IMM ((-1U>>shift), nbit, at);
+                 break;
+               }
+           case 'S':
+             /* XSm@n.  */
+               {
+                 int nbit = 0;
+                 int at = -1;
+                 int shift = 0;
+                 nbit = strtol (++oparg, (char **) &oparg, 10);
+                 if ((*oparg) =='>' && (*(oparg+1)) == '>')
+                   shift = strtol (oparg, (char **) &oparg, 10);
+                 if (*oparg =='@')
+                   at = strtol(++oparg, (char **) &oparg, 10);
+                 oparg--;
+    
+                 used_bits |= ENCODE_VENDOR_THEAD_IMM ((-1>>shift), nbit, at);
+                 break;
+               }
+           }
+          break;
 	default:
 	unknown_validate_operand:
 	  as_bad (_("internal: bad RISC-V opcode "
@@ -3264,6 +3307,85 @@ riscv_ip (char *str, struct riscv_cl_insn *ip, expressionS *imm_expr,
 	      imm_expr->X_op = O_absent;
 	      asarg = expr_end;
 	      continue;
+
+            case 'X': /* Vendor-specific.  */
+               {
+                 int nbit = 0;
+                 int at = -1;
+                 int shift = 0;
+                 switch (*++oparg)
+                   {
+                   case 'I':
+		     /* XIm@n: m bits unsigned immediate at opcode[m+n-1:n] */
+                     nbit = strtol (++oparg, (char **) &oparg, 10);
+                     if ((*oparg) =='@')
+                       at = strtol (++oparg, (char **) &oparg, 10);
+        
+                     oparg--;
+        
+                     my_getExpression (imm_expr, asarg);
+                     if (imm_expr->X_op != O_constant
+                         || !VALID_VENDOR_THEAD_IMM (imm_expr->X_add_number, nbit, at))
+                       as_bad (_("bad"));
+                     ip->insn_opcode |=
+                       ENCODE_VENDOR_THEAD_IMM ((imm_expr->X_add_number >> shift), nbit, at);
+                     asarg = expr_end;
+                     imm_expr->X_op = O_absent;
+                     break;
+        
+                   case 'S':
+                     /* XSm@n.  */
+                     nbit = strtol (++oparg, (char **) &oparg, 10);
+                     if ((*oparg) =='<' && (*(oparg+1)) == '<')
+                       {
+                         oparg+= 2;
+                         shift = strtol (++oparg, (char **) &oparg, 10);
+                       }
+        
+                     if ((*oparg) =='@')
+                       at = strtol(++oparg, (char **) &oparg, 10);
+        
+                     oparg--;
+        
+                     my_getExpression (imm_expr, asarg);
+                     if (imm_expr->X_op != O_constant
+                         || !VALID_VENDOR_THEAD_SIGN_IMM ((imm_expr->X_add_number >> shift), nbit, at))
+		       as_bad (_("bad"));
+                     ip->insn_opcode |=
+                       ENCODE_VENDOR_THEAD_SIGN_IMM (imm_expr->X_add_number, nbit, at);
+                     asarg = expr_end;
+                     imm_expr->X_op = O_absent;
+                     break;
+        
+                   case 'g':
+                     /* Xgm@n.  */
+                     nbit = strtol (++oparg, (char **) &oparg, 10);
+                     if ((*oparg) == '<' && (*(oparg + 1)) == '<')
+                       {
+                         oparg += 2;
+                         shift = strtol (++oparg, (char **) &oparg, 10);
+                       }
+        
+                     if ((*oparg) == '@')
+                       at = strtol (++oparg, (char **) &oparg, 10);
+        
+                     oparg--;
+        
+                     my_getExpression (imm_expr, asarg);
+                     if (imm_expr->X_op != O_register
+                         || !VALID_VENDOR_THEAD_IMM (imm_expr->X_add_number, nbit, at))
+		       as_bad (_("bad"));
+                     ip->insn_opcode |=
+                       ENCODE_VENDOR_THEAD_IMM (imm_expr->X_add_number, nbit, at);
+                     asarg = expr_end;
+                     break;
+
+                   default:
+		     as_bad (_("internal: unknown X argument type `%s'"),
+		             opargStart);
+                   }
+               }
+              break;
 
 	    default:
 	    unknown_riscv_ip_operand:

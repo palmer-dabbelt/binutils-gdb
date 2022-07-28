@@ -1,4 +1,4 @@
-#as: -march=rv32imafd_xargle2p0
+#as: -march=rv32imafd_xtheadc2p0
 #objdump: -dr
 #source: empty.s
 

@@ -397,6 +397,11 @@ enum riscv_insn_class
   INSN_CLASS_ZICBOP,
   INSN_CLASS_ZICBOZ,
   INSN_CLASS_H,
+  INSN_CLASS_THEAD_C,
+  INSN_CLASS_THEAD_E,
+  INSN_CLASS_THEAD_SE,
+  INSN_CLASS_THEAD_C_OR_E,
+  INSN_CLASS_THEAD_C_OR_E_OR_SE,
 };
 
 /* This structure holds information for a particular instruction.  */
@@ -530,5 +535,21 @@ extern const char * const riscv_vma[2];
 
 extern const struct riscv_opcode riscv_opcodes[];
 extern const struct riscv_opcode riscv_insn_types[];
+
+/* T-HEAD IMM Encoding.  */
+#define EXTRACT_VENDOR_THEAD_IMM(x,nbit,at) \
+  (RV_X(x, at, nbit))
+#define EXTRACT_VENDOR_THEAD_SIGN_IMM(x,nbit,at) \
+  (RV_X(x, at, nbit) | ((-(RV_X(x, (at+nbit-1),1))) << (nbit)))
+
+#define ENCODE_VENDOR_THEAD_IMM(x,nbit,at) \
+  (RV_X(x, 0, nbit) << at)
+#define ENCODE_VENDOR_THEAD_SIGN_IMM(x,nbit,at) \
+  (RV_X(x, 0, nbit) << at)
+
+#define VALID_VENDOR_THEAD_IMM(x,nbit,at) \
+  (EXTRACT_VENDOR_THEAD_IMM(ENCODE_VENDOR_THEAD_IMM(x,nbit,at),nbit,at) == (x))
+#define VALID_VENDOR_THEAD_SIGN_IMM(x,nbit,at) \
+  (EXTRACT_VENDOR_THEAD_SIGN_IMM(ENCODE_VENDOR_THEAD_SIGN_IMM(x,nbit,at),nbit,at) == (x))
 
 #endif /* _RISCV_H_ */
